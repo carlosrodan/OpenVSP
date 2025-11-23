@@ -8,6 +8,12 @@
 
 #include "START_NAME_SPACE.H"
 
+// ===== My modification =======
+// ---- New for text wake dump ----
+static FILE * WakeTextFile = nullptr;
+// ---------------------------------
+
+
 /*##############################################################################
 #                                                                              #
 #                      Allocate space for statics                              #
@@ -3458,7 +3464,16 @@ void VSP_SOLVER::Solve(int Case)
     if ( WriteTecplotFile_ ) WriteOutTecPlotFile();
        
     // Close up files
- 
+
+    // ======= My modification ===========
+    // ---- close our text wake dump ----
+    if ( WakeTextFile )
+    {
+        fclose( WakeTextFile );
+        WakeTextFile = nullptr;
+    }
+    // -----------------------------------
+
     if ( Case <= 0                    ) fclose(StatusFile_);
     if ( Case <= 0                    ) fclose(LoadFile_);
     if ( Case <= 0                    ) fclose(ADBFile_);
@@ -32555,7 +32570,18 @@ void VSP_SOLVER::WriteOutAerothermalDatabaseSolution(void)
     if ( Verbose_ ) { printf("There are %d trailing vortices for adb file output... \n",NumTrailVortices);fflush(NULL); };
 
     if ( Verbose_ ) { printf("Writing out adb number of trailing vortices header... \n");fflush(NULL); };
-      
+
+    // ===== My modification =======
+    // ---- open our text wake‐dump ----
+    {
+        char wake_name[2048];
+        sprintf( wake_name, "%s_wake.txt", FileName_ );
+        WakeTextFile = fopen( wake_name, "w" );
+        if ( !WakeTextFile )
+            printf("** ERROR: Could not open %s for wake dump\n", wake_name );
+    }
+    // ----------------------------------
+
     fwrite(&NumTrailVortices, i_size, 1, ADBFile_);
 
     if ( Verbose_ ) { printf("Writing out adb number of trailing vortices data... \n");fflush(NULL); };
@@ -32564,7 +32590,7 @@ void VSP_SOLVER::WriteOutAerothermalDatabaseSolution(void)
            
        for ( i = 1 ; i <= VSPGeom().VortexSheet(k).NumberOfTrailingVortices() ; i++ ) {
 
-          VSPGeom().VortexSheet(k).TrailingVortex(i).WriteToFile(ADBFile_);
+          VSPGeom().VortexSheet(k).TrailingVortex(i).WriteToFile(ADBFile_, WakeTextFile);
 
        }
        

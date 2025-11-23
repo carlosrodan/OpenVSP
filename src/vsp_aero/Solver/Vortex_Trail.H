@@ -462,7 +462,7 @@ public:
 
     /** Write trailing vortex data to a file **/
     
-    void WriteToFile(FILE *adb_file);
+    void WriteToFile(FILE *adb_file, FILE *WakeTextFile);
     
     /** Read in trailing vortex data from a file **/
     

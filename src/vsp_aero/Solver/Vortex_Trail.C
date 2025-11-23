@@ -967,43 +967,49 @@ double VORTEX_TRAIL::GammaScale(int i)
 #                                                                              #
 ##############################################################################*/
 
-void VORTEX_TRAIL::WriteToFile(FILE *adb_file)
+void VORTEX_TRAIL::WriteToFile(FILE *adb_file, FILE *WakeTextFile)
 {
  
-    int i, n, i_size, c_size, d_size;
-    double x, y, z, s;
-    
-    // Sizeof int and double
+   int i, n, i_size, c_size, d_size;
+   double x, y, z, s;
+   
+   // Sizeof int and double
 
-    i_size = sizeof(int);
-    c_size = sizeof(char);
-    d_size = sizeof(double);
+   i_size = sizeof(int);
+   c_size = sizeof(char);
+   d_size = sizeof(double);
 
-    n = NumberOfNodes();
+   n = NumberOfNodes();
 
-    if ( TimeAccurate_ ) n = MIN( Time_ + 1, NumberOfNodes());
+   if ( TimeAccurate_ ) n = MIN( Time_ + 1, NumberOfNodes());
 
-    if ( TE_Node_Region_Is_Concave_ ) n = 1;
-    
-    fwrite(&(TE_Node_), i_size, 1, adb_file);  // Kutta node
-        
-    s = double (SoverB_);
-    
-    fwrite(&(s), d_size, 1, adb_file); // S over B (span) 
-    
-    fwrite(&(n), i_size, 1, adb_file); // Number of nodes
+   if ( TE_Node_Region_Is_Concave_ ) n = 1;
+   
+   fwrite(&(TE_Node_), i_size, 1, adb_file);  // Kutta node
+      
+   s = double (SoverB_);
+   
+   fwrite(&(s), d_size, 1, adb_file); // S over B (span) 
+   
+   fwrite(&(n), i_size, 1, adb_file); // Number of nodes
 
-    for ( i = 1 ; i <= n ; i++ ) {
+   for ( i = 1 ; i <= n ; i++ ) {
 
-       x = double (NodeList_[i].x());
-       y = double (NodeList_[i].y());
-       z = double (NodeList_[i].z());
+      x = double (NodeList_[i].x());
+      y = double (NodeList_[i].y());
+      z = double (NodeList_[i].z());
 
-       fwrite(&(x), d_size, 1, adb_file);
-       fwrite(&(y), d_size, 1, adb_file);
-       fwrite(&(z), d_size, 1, adb_file);
+      fwrite(&(x), d_size, 1, adb_file);
+      fwrite(&(y), d_size, 1, adb_file);
+      fwrite(&(z), d_size, 1, adb_file);
 
-    }
+      // ====== My modification =========
+      if ( WakeTextFile != nullptr ) {
+          fprintf( WakeTextFile, "% .6e % .6e % .6e\n", x, y, z );
+      }
+      // ================================      
+
+   }
 
 }
 
