@@ -11,6 +11,7 @@
 // ===== My modification =======
 // ---- New for text wake dump ----
 static FILE * WakeTextFile = nullptr;
+static int WakeTextFileFirstWrite = 1;  // Flag to track first write (truncate file)
 // ---------------------------------
 
 
@@ -3471,6 +3472,11 @@ void VSP_SOLVER::Solve(int Case)
     {
         fclose( WakeTextFile );
         WakeTextFile = nullptr;
+    }
+    // Reset flag only at end of sweep (Case <= 0)
+    if ( Case <= 0 )
+    {
+        WakeTextFileFirstWrite = 1;  // Reset for next sweep
     }
     // -----------------------------------
 
@@ -32576,9 +32582,20 @@ void VSP_SOLVER::WriteOutAerothermalDatabaseSolution(void)
     {
         char wake_name[2048];
         sprintf( wake_name, "%s_wake.txt", FileName_ );
-        WakeTextFile = fopen( wake_name, "w" );
+        // Open in write mode for first case (truncate), append mode for subsequent cases
+        const char *mode = ( WakeTextFileFirstWrite ) ? "w" : "a";
+        WakeTextFile = fopen( wake_name, mode );
         if ( !WakeTextFile )
             printf("** ERROR: Could not open %s for wake dump\n", wake_name );
+        else {
+            // Write header with alpha, mach, beta for this case
+            fprintf( WakeTextFile, "# Alpha: % .6e  Mach: % .6e  Beta: % .6e\n", 
+                     double(AngleOfAttack_/TORAD), Mach_, double(AngleOfBeta_/TORAD) );
+            // Write column header for wake point coordinates
+            fprintf( WakeTextFile, "x y z\n" );
+            fflush( WakeTextFile );
+        }
+        WakeTextFileFirstWrite = 0;  // Next write will append
     }
     // ----------------------------------
 
